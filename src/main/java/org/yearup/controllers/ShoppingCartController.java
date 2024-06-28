@@ -60,16 +60,21 @@ public ShoppingCartController(ShoppingCartDao shoppingCartDao, UserDao userDao, 
     //
     @PostMapping("products/{id}")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("isAuthenticated()")
     public ShoppingCart addToCart(Principal principal, @PathVariable int id){
     ShoppingCart shoppingCart = new ShoppingCart();
         try {
             String userName = principal.getName();
             User user = userDao.getByUserName(userName);
             int userId = user.getId();
-            ;
+            Product product= productDao.getById(id);
+            ShoppingCartItem item = new ShoppingCartItem();
+            item.setProduct(product);
+            shoppingCartDao.add(item,userId);
+
 
         } catch (Exception e) {
-            throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "User Unauthorized");
+            throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED);
         }
 return shoppingCart;
 
@@ -88,11 +93,11 @@ public void update(Principal principal, @PathVariable int productId, @RequestBod
         int userId = user.getId();
         shoppingCartDao.update(productDao.getById(productId));
     } catch (Exception e) {
-        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error Detected");
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
-    @DeleteMapping
 
+    @DeleteMapping
     public ShoppingCart emptyCart(Principal principal){
         String userName = principal.getName();
         // find database user by userId
